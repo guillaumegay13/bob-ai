@@ -8,7 +8,7 @@ client = OpenAI(
     api_key=os.getenv("OPENAI_API_KEY")  # Set your API key as environment variable
 )
 
-def call_llm(prompt, messages_history=None, admin_mode=False):
+def call_llm(prompt, messages_history=None, admin_mode=False, max_context_messages=20):
     """Call OpenAI API and get response in specified JSON format"""
     
     # Dynamically generate tools description
@@ -75,6 +75,11 @@ Response: {"response": "Hello! I'm here to help you with weather information, ti
     messages = [{"role": "system", "content": system_prompt}]
     
     if messages_history:
+        # Keep only the last N messages to prevent token overflow
+        if len(messages_history) > max_context_messages:
+            if admin_mode:
+                print(f"[DEBUG: Trimming conversation history from {len(messages_history)} to {max_context_messages} messages]")
+            messages_history = messages_history[-max_context_messages:]
         messages.extend(messages_history)
     elif prompt:
         messages.append({"role": "user", "content": prompt})
@@ -96,6 +101,9 @@ Response: {"response": "Hello! I'm here to help you with weather information, ti
     # Print token usage in admin mode
     if admin_mode and response.usage:
         print(f"[DEBUG: Tokens - Prompt: {response.usage.prompt_tokens}, Completion: {response.usage.completion_tokens}, Total: {response.usage.total_tokens}]")
+        # Warn if approaching token limit
+        if response.usage.prompt_tokens > 3500:
+            print(f"[WARNING: Approaching token limit! Consider using /clear to start fresh.]")
     
     try:
         return json.loads(response.choices[0].message.content)
