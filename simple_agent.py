@@ -101,7 +101,7 @@ Response: {"response": "Hello! I'm here to help you with weather information, ti
     # Print token usage in admin mode
     if admin_mode and response.usage:
         print(f"[DEBUG: Tokens - Prompt: {response.usage.prompt_tokens}, Completion: {response.usage.completion_tokens}, Total: {response.usage.total_tokens}]")
-        # Warn if approaching token limit
+        # Warn if approaching token limit (only in admin mode)
         if response.usage.prompt_tokens > 3500:
             print(f"[WARNING: Approaching token limit! Consider using /clear to start fresh.]")
     
